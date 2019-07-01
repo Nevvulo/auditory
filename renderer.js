@@ -100,7 +100,15 @@ const reload = () => {
   create();
 }
 
+const switchMode = () => {
+  this.settings.set('mode', this.settings.get('mode') === 'amp' ? 'fft' : 'amp');
+  console.log('Switched mode');
+  reload();
+}
+
+create();
+
 module.exports = {
-  create, start, stop, reload
+  create, start, stop, reload, switchMode
 }
 

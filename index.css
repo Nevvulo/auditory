@@ -1,7 +1,66 @@
 body {
   overflow: hidden;
-  padding-top: 50%;
   background-color: #212121;
+  font-family: 'Lato', sans-serif;
+  transition: background-color .5s;
+  height: 100vh;
+  margin: 0;
+  width: 100vw;
+}
+
+.menu {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
+}
+
+.menu a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+.menu a:hover {
+  color: #f1f1f1;
+}
+
+.menu .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+
+.menu-btn {
+  opacity: 0;
+  font-size: 24px;
+  color: white;
+  transition: opacity .5s;
+}
+
+.menu-btn:hover {
+  opacity: 1;
+}
+
+.visualizer-container {
+  transition: margin-left .5s;
+  z-index: -1;
+}
+
+.visualizer {
+  position: relative;
+  z-index: -2;
 }
 
 .circle {
@@ -17,8 +76,10 @@ body {
 }
 
 .center {
-  top: 50%;
-  left: 50%;
-  transform: translate3d(-50%,-50%, 0);
   position: absolute;
+  left: 40%;
+  top: 40%;
+  -webkit-transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%);
+  margin: auto;
 }

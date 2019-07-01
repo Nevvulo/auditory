@@ -1,15 +1,20 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <meta charset="UTF-8">
+    <meta charset='UTF-8'>
     <title>Auditory</title>
     <script src='./renderer.js'></script>
+    <script src='./menu.js'></script>
     <link rel='stylesheet' type='text/css' href='./index.css'></link>
   </head>
   <body>
-    <script>create();</script>
+    <div class='menu'>
+        <a href='javascript:void(0)' class='closebtn' onclick='closeNav()'>&times;</a>
+        <button onclick='switchMode()'>Toggle mode</button>
+    </div>
+    <a class='menu-btn' onclick='openNav()'>&#9776;</a>
     <div class='visualizer-container center'>
-      <div class='visualizer'>
+      <div class='visualizer center'>
         <div class='circle'></div>
       </div>
     </div>
