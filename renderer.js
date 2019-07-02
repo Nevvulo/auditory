@@ -62,10 +62,10 @@ const start = () => {
             const amp = mode === 'amp' ? xDFT_psd / FFT_DIVIDE[(beastiness || 1) - 1] : (amount / bufferLength) * 2;
 
             if (!amp) {
-              body.setAttribute('style', `background: rgba(${customBGColor.r}, ${customBGColor.g}, ${customBGColor.b}, 1)`);
+              body.setAttribute('style', `background: rgba(${customColor.r}, ${customColor.g}, ${customColor.b}, 1)`);
             } else {
               visualizer.style.transform = `rotate(${amp / 10}deg) scale(${(amp / 100) * 1.35})`
-              body.setAttribute('style', `background: rgba(${customColor.r}, ${customColor.g}, ${customColor.b}, ${3 / (amp / 2 / (100.1 - (brightness || 0.1))).toString()}) ${important ? '!important' : ''}`);
+              body.setAttribute('style', `background: rgba(${customColor.r}, ${customColor.g}, ${customColor.b},  ${2 / (amp / 2 / (100.1 - (brightness || 0.1))).toString()}) ${important ? '!important' : ''}`);
             }
           }, 1000 / (15 * ((beastiness || 1) * 2)));
           this.intervals = [ style ];
@@ -78,15 +78,15 @@ const start = () => {
   });
 }
 
-const create = (window) => {
-  MAIN_WINDOW = window;
+const create = () => {
+  console.log('New instance created')
   this.settings = new Map([
     ['brightness', 80],
     ['beastiness', 5],
     ['color', '#212121'],
     ['mode', 'amp'],
   ])
-  this.intervals = start();
+  start();
 }
 
 const stop = () => {
@@ -97,18 +97,16 @@ const stop = () => {
 
 const reload = () => {
   stop();
-  create();
+  start();
 }
 
-const switchMode = () => {
-  this.settings.set('mode', this.settings.get('mode') === 'amp' ? 'fft' : 'amp');
-  console.log('Switched mode');
+const changeSetting = (setting, value) => {
+  this.settings.set(setting, value);
+
   reload();
 }
 
-create();
-
 module.exports = {
-  create, start, stop, reload, switchMode
+  create, start, stop, reload, changeSetting, settings: this.settings
 }
 
