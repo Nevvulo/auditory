@@ -1,11 +1,34 @@
 body {
   overflow: hidden;
   background-color: #212121;
-  font-family: 'Lato', sans-serif;
-  transition: background-color .5s;
-  height: 100vh;
-  margin: 0;
-  width: 100vw;
+}
+
+.circle {
+  border-radius: 100%;
+  background-color: #9e9e9e;
+  width: 100px;
+  height: 100px;
+  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/microsoft/74/fire_1f525.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 50%;
+  box-shadow: 1px 1px 2px #212121;
+}
+
+.center {
+  top: 50%;
+  left: 50%;
+  transform: translate3d(-50%,-50%, 0);
+  position: absolute;
+} 
+
+.visualizer-container {
+  transition: margin-left .5s;
+  z-index: -1;
+}
+
+.visualizer {
+  z-index: -2;
 }
 
 .menu {
@@ -51,35 +74,4 @@ body {
 
 .menu-btn:hover {
   opacity: 1;
-}
-
-.visualizer-container {
-  transition: margin-left .5s;
-  z-index: -1;
-}
-
-.visualizer {
-  position: relative;
-  z-index: -2;
-}
-
-.circle {
-  border-radius: 100%;
-  background-color: #9e9e9e;
-  width: 100px;
-  height: 100px;
-  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/microsoft/74/fire_1f525.png');
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: 50%;
-  box-shadow: 1px 1px 2px #212121;
-}
-
-.center {
-  position: absolute;
-  left: 40%;
-  top: 40%;
-  -webkit-transform: translate(-50%, -50%);
-  transform: translate(-50%, -50%);
-  margin: auto;
 }
