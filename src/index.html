@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Auditory</title>
+    <script src='./renderer.js'></script>
+    <script src='./menu.js'></script>
+    <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+    <link rel='stylesheet' type='text/css' href='./index.css'></link>
+  </head>
+  <body>
+    <div class='menu'>
+        <a href='javascript:void(0)' class='closebtn' onclick='closeNav()'>&times;</a>
+        <div class='menu-header-large'>Appearance</div>
+        <div class='menu-header'>Amplifier Mode</div>
+        <button onclick="changeSetting('mode', settings.get('mode') === 'amp' ? 'fft' : 'amp')">Switch mode</button>
+
+        <div class='menu-header'>Song Bar</div>
+        <button onclick="document.querySelector('.song').style.display = document.querySelector('.song').style.display ? '' : 'none'">Toggle</button>
+
+        <br />
+        <br />
+
+        <div class='menu-header-large'>Settings</div>
+        <div class='menu-header'>Performance (lower is better)</div>
+        <div class="slidecontainer">
+          <input onchange="changeSetting('beastiness', Number(this.value))" type="range" min="1" max="5" value="5" class="slider">
+        </div>
+        <div class='menu-header'>Brightness</div>
+        <div class="slidecontainer">
+          <input onchange="changeSetting('brightness', Number(this.value))" type="range" min="1" max="100" value="75" class="slider">
+        </div>
+        <div class='menu-header'>Amplitude</div>
+        <div class="slidecontainer">
+          <input onchange="changeSetting('amp', Number(this.value))" type="range" min="0.25" step="0.25" max="5" value="1" class="slider">
+        </div>
+
+        <div class='menu-header'>Shake</div>
+        <div class="slidecontainer">
+          <input onchange="changeSetting('shake', Number(this.value))" type="range" min="0" max="2" value="1" class="slider">
+        </div>
+
+        <div class='menu-header'>Color</div>
+        <input type="text" placeholder='Enter a HEX code, eg. #212121' onchange="changeSetting('color', this.value)">
+
+        <div class='menu-header'>Visualizer Image</div>
+        <input type="text" placeholder='Link to image' onchange="changeSetting('image', this.value)">
+
+        <div class='menu-header'>Visualizer Rotation</div>
+        <div class="slidecontainer">
+          <input onchange="changeSetting('rotation', Number(this.value))" type="range" min="0" max="40" value="13" class="slider">
+        </div>
+
+        <div class='menu-header'>Spotify</div>
+        <div>
+          <button class='link-spotify'><img src='./img/spotify.png' class='spotify-logo' />Link with Spotify</button>
+        </div>
+
+        <br>
+        <br>
+
+        <div class='menu-header-large'>Debug Values</div>
+        <div class='flex direction-row align-center'><div class='menu-header'>FPS</div><div class='fps-counter-menu'></div></div>
+
+        <div class='menu-header'>Current Amp Value</div>
+        <div id='amp-value' class='value'>0</div>
+
+        <div class='menu-header'>Particle Count</div>
+        <div id='particle-count' class='value'>0</div>
+
+        <div class='menu-header'>Current Rotation Value</div>
+        <div id='rotation-value' class='value'>0</div>
+
+        <br /><br />
+        <br /><br />
+    </div>
+    <a class='menu-btn' onclick='openNav()'>&#9776;</a>
+    <div class='container'>
+      <div class='song'>
+        <div class='flex direction-row'>
+          <div class='song-art'>
+
+          </div>
+          <div class='song-info'>
+            <div class='song-name'>
+
+            </div>
+            <div class='song-artists'>
+          
+            </div>
+            <div class='song-mediabar'>
+              <div class='song-mediabar-time song-mediabar-time-first'>0:00</div>
+              <div class='song-mediabar-progress'></div>
+              <div class='song-mediabar-full'></div>
+              <div class='song-mediabar-time song-mediabar-time-last'>0:00</div>
+            </div>
+            <div class='fps-counter'></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class='visualizer-container center'>
+      <div class='visualizer'>
+          <div id='circle' class='circle'></div>
+      </div>
+    </div>
+    <filter id="fancy-goo">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+      <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+    </filter>
+  </body>
+</html>
