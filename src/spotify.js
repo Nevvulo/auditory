@@ -1,8 +1,8 @@
 const axios = require('axios');
 const qs = require('querystring')
 const fs = require('fs');
-const secrets = null;
-const users = null;
+let secrets = null;
+let users = null;
 
 class SpotifyInstance {
   constructor () {
