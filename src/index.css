@@ -1,0 +1,431 @@
+@import url('https://rsms.me/inter/inter.css');
+
+html {
+  background-color: #212121;
+}
+
+body {
+  overflow: hidden;
+  background-color: #212121;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  z-index: 0;
+  text-rendering: optimizeLegibility;
+}
+
+.visualizer-container {
+  transition: margin-left .5s;
+  z-index: -1;
+}
+
+.circle {
+  border-radius: 100%;
+  background-color: transparent;
+  width: 100px;
+  height: 100px;
+  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/microsoft/74/party-popper_1f389.png');
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 50%;
+}
+
+.center {
+  top: 50%;
+  left: 50%;
+  transform: translate3d(-50%,-50%, 0);
+  position: absolute;
+}
+
+.bar {
+  background-color: red;
+  width: 4px;
+  height: 50px;
+  top: 50%;
+  left: 50%;
+  position: absolute;
+  z-index: -3;
+  filter:url("#fancy-goo");
+}
+
+.visualizer, .circle, .song {
+  z-index: 999 !important;
+}
+
+.container {
+  z-index: -1;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+.menu {
+  height: 100%;
+  width: 0;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+  padding-top: 60px;
+}
+
+.menu a {
+  padding: 8px 8px 8px 32px;
+  text-decoration: none;
+  font-size: 25px;
+  color: #818181;
+  display: block;
+  transition: 0.3s;
+}
+
+.menu a:hover {
+  color: #f1f1f1;
+}
+
+.menu .closebtn {
+  position: absolute;
+  top: 0;
+  right: 25px;
+  font-size: 36px;
+  margin-left: 50px;
+}
+
+.menu-btn {
+  opacity: 0;
+  font-size: 24px;
+  color: white;
+  transition: opacity .5s;
+}
+
+.menu-btn:hover {
+  opacity: 1;
+}
+
+.menu button {
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.5px;
+  background-color: #474747;
+  border: none;
+  color: white;
+  padding: 8px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 14px;
+  border-radius: 4px;
+}
+
+.menu-header-large {
+  color: #ebebeb;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 24px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.5px;
+  margin-top: 24px;
+  margin-left: -6px;
+}
+
+.menu-header {
+  color: #636363;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  text-transform: uppercase;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 600;
+  font-family: 'Roboto', sans-serif;
+  margin-top: 24px;
+  margin-bottom: 6px;
+}
+
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 12px;
+  background: #030303;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+  border-radius: 12px;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: rgb(112, 112, 112);
+  border: 2px solid #111;
+  cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: rgb(161, 161, 161);
+}
+
+.menu button.link-spotify {
+  background-color: #4CAF50 !important;
+  color: white;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.5px;
+  text-transform: uppercase;
+  font-size: 11px;
+  padding: 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.spotify-logo {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+}
+
+.song {
+  display: flex;
+  position: absolute;
+  padding: 1em;
+  width: 100%;
+  bottom: 0;
+  z-index: 3;
+  background-color: rgba(0, 0, 0, 0.6);
+}
+
+.song-info {
+  flex-direction: column;
+  font-family: 'Roboto', sans-serif;
+  margin-left: 32px;
+}
+
+.song-name {
+  font-size: 48px;
+  font-weight: 800;
+  color: white;
+}
+
+.song-artists {
+  font-size: 19px;
+  color: #d3d3d3;
+  position: relative;
+  top: -6px;
+}
+
+.song-art {
+  border-radius: 8px;
+  position: relative;
+  top: 8px;
+  width: 96px;
+  height: 96px;
+  box-shadow: 1px 1px 4px black;
+  margin-left: 24px;
+}
+
+.song-mediabar {
+  position: relative;
+  display: flex;
+  padding-top: 4px;
+  flex-direction: row;
+  align-items: center;
+}
+
+.song-mediabar-time {
+  padding-left: 6px;
+  padding-right: 6px;
+  color: white;
+}
+
+.song-mediabar-time-first {
+  padding-left: 0;
+}
+
+.song-mediabar-progress {
+  position: absolute;
+  height: 5px;
+  background: rgb(111, 250, 111);
+  box-shadow: -2px 2px 5px rgb(69, 177, 69);
+  border-radius: 4px;
+  max-width: 350px;
+  left: 46px;
+}
+
+.song-mediabar-full {
+  background: grey;
+  width: 350px;
+  height: 5px;
+  border-radius: 4px;
+  max-width: 350px;
+}
+
+.flex {
+  display: flex;
+}
+
+.direction-row {
+  flex-direction: row;
+}
+
+.value {
+  color: white;
+  font-family: monospace;
+  font-size: 18px;
+}
+
+.particle {
+  position: absolute;
+  z-index: -1;
+  animation: 500ms fadeOut 0.65s forwards;
+  transform: translate3d(0, 0, 0);
+}
+
+.fade-out {
+  animation: 0ms fadeOut 0.2s forwards;
+}
+
+.normal-particle {
+  background: rgba(255, 255, 255, 0.4);
+  box-shadow: 1px 1px 5px 3px rgba(255, 255, 255, 0.541);
+  border-radius: 360px;
+  width: 3px;
+  height: 3px;
+}
+
+.custom-particle {
+  width: 32px;
+  height: 32px;
+  z-index: -1;
+  animation: 500ms fadeOut 0.24s forwards;
+  opacity: 0.5;
+  transform: translate3d(0, 0, 0);
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-size: 50%;
+  background-color: transparent;
+}
+
+.particle-star {
+  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/white-medium-star_2b50.png') !important;
+}
+
+.particle-star-1 {
+  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/glowing-star_1f31f.png') !important;
+}
+
+.particle-confetti {
+  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/confetti-ball_1f38a.png') !important;
+}
+
+.particle-sparkle {
+  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/sparkles_2728.png') !important;
+}
+
+.rumble {
+  animation: shake 0.1s cubic-bezier(.36,.07,.19,.97) both;
+  animation-iteration-count: infinite;
+}
+
+.bigrumble {
+  animation: bigshake 0.34s cubic-bezier(.36,.07,.19,.97) both;
+  animation-iteration-count: infinite;
+}
+
+.fps-counter {
+  position: absolute;
+  bottom: 0px;
+  right: 24px;
+  padding: 1em;
+  color: white;
+  font-family: monospace;
+}
+
+.fps-counter-menu {
+  margin-top: 16px;
+  position: relative;
+  margin-left: auto;
+  color: white;
+  font-family: monospace;
+}
+
+input[type="text"] {
+  background-color: #080808;
+  padding: 0.5em;
+  border: 1px solid #1a1a1a;
+  font-family: 'Inter', sans-serif;
+  border-radius: 4px;
+}
+
+.flex {
+  display: flex;
+}
+
+.direction-row {
+  flex-direction: row;
+}
+
+.align-center {
+  align-items: center;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: initial;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes shake {
+  10%, 90% {
+    transform: translate3d(-5px, -1px, 0);
+  }
+  
+  20%, 80% {
+    transform: translate3d(4px, 0.5px, 0);
+  }
+
+  30%, 50%, 70% {
+    transform: translate3d(-6px, 1px, 0);
+  }
+
+  40%, 60% {
+    transform: translate3d(6px, -0.6px, 0);
+  }
+}
+
+@keyframes bigshake {
+  10%, 90% {
+    transform: translate3d(-14px, -2px, 0);
+  }
+  
+  20%, 80% {
+    transform: translate3d(13px, 1px, 0);
+  }
+
+  30%, 50%, 70% {
+    transform: translate3d(-14px, 4px, 0);
+  }
+
+  40%, 60% {
+    transform: translate3d(13px, -5px, 0);
+  }
+}
