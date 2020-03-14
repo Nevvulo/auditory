@@ -1,3 +1,10 @@
+spotify.json
+secrets.json
+
+auditory-win32-x64/
+
+thumbnail.png
+
 # Logs
 logs
 *.log

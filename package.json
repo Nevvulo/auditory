@@ -1,0 +1,29 @@
+{
+  "name": "auditory",
+  "version": "2.0.0",
+  "description": "Audio visualiser made in Electron",
+  "main": "index.js",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "color-thief": "^2.2.5",
+    "color-thief-node": "^1.0.3",
+    "dominant-color": "^0.0.1",
+    "electron-squirrel-startup": "^1.0.0"
+  },
+  "devDependencies": {
+    "electron-winstaller": "^4.0.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nevvulo/auditory.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Nevvulo/auditory/issues"
+  },
+  "homepage": "https://github.com/Nevvulo/auditory#readme"
+}
