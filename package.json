@@ -4,11 +4,7 @@
   "description": "Audio visualiser made in Electron",
   "main": "index.js",
   "dependencies": {
-    "axios": "^0.19.2",
-    "color-thief": "^2.2.5",
-    "color-thief-node": "^1.0.3",
-    "dominant-color": "^0.0.1",
-    "electron-squirrel-startup": "^1.0.0"
+    "axios": "^0.19.2"
   },
   "devDependencies": {
     "electron-winstaller": "^4.0.0"

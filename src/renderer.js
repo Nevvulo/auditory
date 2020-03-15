@@ -42,6 +42,7 @@ async function setupClassicVisualizer () {
   audio.connect(analyser);
   
   analyser.fftSize = FFT_SIZES[(beastiness || 1) - 1];
+  analyser.frequencyBinCount = 1024;
 
   const hexToRGB = (hex) => {
     const bigint = parseInt(hex, 16);
@@ -54,8 +55,10 @@ async function setupClassicVisualizer () {
   // Find the container to change the style
   body = document.querySelector('body');
   let visualizer = document.querySelector('.visualizer');
+  let canvas = document.querySelector('.canvas');
   let fpsCounter = document.querySelector('.fps-counter');
   let fpsCounterMenu = document.querySelector('.fps-counter-menu');
+  const container = document.querySelector('.container');
   const visualizerContainer = document.querySelector('.visualizer-container');
   const box = visualizer.getBoundingClientRect();
   let visualizerContainerBox = visualizerContainer.getBoundingClientRect();
@@ -63,6 +66,8 @@ async function setupClassicVisualizer () {
   const particleCounter = document.querySelector('#particle-count');
   const rotationValue = document.querySelector('#rotation-value');
   const visualizerCore = document.querySelector('.circle');
+
+  const ctx = canvas.getContext('2d');
 
   visualizerCore.style.backgroundImage = `url('${image}')`;
 
@@ -73,6 +78,7 @@ async function setupClassicVisualizer () {
   let turnAround = false;
 
   let particles = [];
+  let timeSinceLastBass = Date.now();
   const PARTICLE_TYPES = ['star', 'star-1', 'sparkle', 'confetti']
   const particleInterval = setInterval(() => {
     visualizerContainerBox = visualizerContainer.getBoundingClientRect();
@@ -108,6 +114,7 @@ async function setupClassicVisualizer () {
     fpsCounterMenu.innerHTML = `${fps.toFixed(2)} FPS`;
     
     const bufferLength = analyser.frequencyBinCount;
+    
     if (flipAmount > rotation) {
       turnAround = false;
       flipAmount -= 0.01;
@@ -125,12 +132,41 @@ async function setupClassicVisualizer () {
       amountMultiplier -= amountMultiplier > 1 ? 0.005 : 0;
     }
 
+    const w = 250;
+    const h = 64;
+
     const dataArray = new Uint8Array(bufferLength);
+    const timeArray = new Uint8Array(bufferLength);
     analyser.getByteFrequencyData(dataArray);
+    analyser.getByteTimeDomainData(timeArray);
+
+    ctx.fillStyle = 'rgb(5, 5, 5)';
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgb(255, 255, 255)';
+    ctx.beginPath();
+
+    var sliceWidth = w * 1.0 / bufferLength;
+    var x = 0;
+
+    for (var i = 0; i < bufferLength; i++) {
+      var v = timeArray[i] / 128.0;
+      var y = v * h / 2;
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+      x += sliceWidth;
+    }
+
+    ctx.lineTo(canvas.width, canvas.height/2);
+    ctx.stroke();
 
     const amount = dataArray.reduce((a, b) => a + b) * amountMultiplier;
-    const bass = (dataArray.slice(0, 16).reduce((a, b) => a + b) * amountMultiplier) / 10;
-    
+    const bass = ((timeArray.slice(0, 4).reduce((a, b) => a + b) / 128) * amountMultiplier) * 80;
+
     const xDFT_psd = Math.abs(amount ** 2);
     const amp = (mode === 'amp' ? xDFT_psd / FFT_DIVIDE[(beastiness || 1) - 1] : (amount / bufferLength) * 2) * amplitude;
     ampValue.innerHTML = `${amp.toFixed(0)} amplitude, ${bass.toFixed(0)} bass`;
@@ -140,18 +176,22 @@ async function setupClassicVisualizer () {
       body.setAttribute('style', `background: rgba(${customColor.r}, ${customColor.g}, ${customColor.b}, 1)`);
     } else {
       particleCounter.innerHTML = `${particles.filter(m => m.lifespan < 4.5e3).length} active, ${particles.length} total`;
-      if (bass > 325 && shakeAmount > 0) {
+      if (bass > 390 && shakeAmount > 0) {
+        timeSinceLastBass = Date.now()
+        container.style.boxShadow = `inset 0px 0px ${bass / 10}px ${bass / 15}px rgba(0, 0, 0, ${bass / 1e3})`;
         visualizer.style.filter = `blur(${amp / (shakeAmount > 1 ? 300 : 500)}px)`;
         circle.classList.add(shakeAmount > 1 ? 'bigrumble' : 'rumble');
       } else {
-        visualizer.style.filter = `blur(0px)`;
-        circle.classList.remove('rumble', 'bigrumble');
+        if (Date.now() - timeSinceLastBass > 100) {
+          visualizer.style.filter = `blur(0px)`;
+          circle.classList.remove('rumble', 'bigrumble');
+        }
       }
       if ((amp > 120 && bass > 300) || keys[88]) { // x key
-        let particleCount = ((amp / (amp / 22.5)) * beastiness) * 2.5;
+        let particleCount = ((amp / (amp / 22.5)) * beastiness) * 4;
 
         let spawned = 0;
-        while (!keys[88] ? (particles.length < particleCount || spawned > 35) : spawned < 100) {
+        while (!keys[88] ? (particles.length < particleCount || spawned < 50) : spawned < 100) {
           if (!keys[88] && particles.length > particleCount) break;
           spawned++;
           const particle = document.createElement('div');
@@ -185,17 +225,21 @@ async function setupClassicVisualizer () {
         }
         if (keys[88]) {
           keys[88] = false;
-          console.log(`Spawning ${Math.floor((particleCount - particles.length) < 0 ? 0 : particleCount - particles.length)} particles through debug key (max ${particleCount})`)
+          console.log(`Spawning 100 particles through debug key (max ${particleCount})`)
         }
       }
 
       for (let i = 0; i < particles.length; i++) {
         const particle = particles[i];
-        const speedAmp = Math.max(0.4, Math.floor(amp / 100) / 2);
+        let speedAmp = Math.max(0.4, Math.floor(amp / 100) / 2);
+        if (bass > 500) {
+          speedAmp *= 2;
+        }
         particle._own.pos.x += (particle._own.vel.x * particle._own.speed.x * speedAmp) * particle._own.dir.x;
         particle._own.pos.y += (particle._own.vel.y * particle._own.speed.y * speedAmp) * particle._own.dir.y;
         particle.lifespan += Math.random() * (Math.random() * 60);
         particle.style.transform = `translateX(${particle._own.pos.x}px) translateY(${particle._own.pos.y}px) rotate(${particle.lifespan / 50}deg)`;
+        
         if (particle.lifespan > Math.max(4.5e3, 6e3 + Math.random() * 2e3)) {
           particle.remove();
           particles.splice(particles.indexOf(particle), 1);
@@ -228,21 +272,20 @@ async function setupClassicVisualizer () {
   this.intervals = [ style, particleInterval ];
 }
 
-function start () {
+async function start () {
   const { desktopCapturer } = require('electron');
-  desktopCapturer.getSources({ types: [ 'window', 'screen' ] }, async (_, sources) => {
-    for (const source of sources) {
-      if (source.name.includes('Screen 1')) {
-        try {
-          setupClassicVisualizer();
-        } catch (e) {
-          console.error(e);
-          reload();
-        }
-        return;
+  const sources = await desktopCapturer.getSources({ types: [ 'window', 'screen' ] });
+  for (const source of sources) {
+    if (source.name.includes('Screen 1')) {
+      try {
+        setupClassicVisualizer();
+      } catch (e) {
+        console.error(e);
+        reload();
       }
+      return;
     }
-  });
+  }
 }
 
 
@@ -273,7 +316,7 @@ async function create () {
   console.log('New instance created')
   this.settings = new Map([
     ['brightness', 75],
-    ['beastiness', 5],
+    ['beastiness', 2],
     ['color', ''],
     ['mode', 'amp'],
     ['amp', 1], // 1 to 10
@@ -291,7 +334,7 @@ async function create () {
   } catch (e) {
     spotify = null;
   }
-
+  console.log(spotify)
   const updateSpotify = async () => {
     const song = await spotify.getCurrentAlbumArt(true);
     let name = song.item.name;

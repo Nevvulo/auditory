@@ -300,6 +300,10 @@ body {
   animation: 0ms fadeOut 0.2s forwards;
 }
 
+.bass-effect-outside {
+  animation: 0ms bassShakeSides 0.2s forwards;
+}
+
 .normal-particle {
   background: rgba(255, 255, 255, 0.4);
   box-shadow: 1px 1px 5px 3px rgba(255, 255, 255, 0.541);
@@ -391,6 +395,16 @@ input[type="text"] {
 
   to {
     opacity: 0;
+  }
+}
+
+@keyframes bassShakeSides {
+  from {
+    box-shadow: inset 0px 0px 40px white;
+  }
+
+  to {
+    box-shadow: none;
   }
 }
 
