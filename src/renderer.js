@@ -276,7 +276,7 @@ async function start () {
   const { desktopCapturer } = require('electron');
   const sources = await desktopCapturer.getSources({ types: [ 'window', 'screen' ] });
   for (const source of sources) {
-    if (source.name.includes('Screen 1')) {
+    if (source.name.includes('Screen 1') || source.name.includes('Entire Screen')) {
       try {
         setupClassicVisualizer();
       } catch (e) {
