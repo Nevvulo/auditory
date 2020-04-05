@@ -7,6 +7,7 @@ If you're installing Auditory for the first time through Git, follow these steps
 **`1.`** Clone this repository (`git clone https://github.com/Nevvulo/auditory`)
 
 **`2.`** Run `npm i` in the root directory
-     You may also need to install Electron manually using `npm i electron -g` (make sure to add `-g` to install globally)
+     
+You may also need to install Electron manually using `npm i electron -g` (make sure to add `-g` to install globally)
      
 **`3.`** After everything has installed, you should be able to run `electron .` in the `src` directory and Auditory will open.
