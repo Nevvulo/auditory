@@ -7,6 +7,7 @@ function openNav() {
   menu.style.padding = '16px';
   menu.style.paddingTop = '52px';
   visualizerContainer.style.marginLeft = '250px';
+  window.menuOpened = true;
 };
 
 function closeNav() {
@@ -18,4 +19,5 @@ function closeNav() {
   menu.style.padding = '0px';
   menu.style.paddingTop = '52px';
   visualizerContainer.style.marginLeft = '0px';
+  window.menuOpened = false;
 };

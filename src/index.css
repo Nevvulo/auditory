@@ -15,17 +15,39 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-.visualizer-container {
-  transition: margin-left .5s;
+.vignette {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  box-shadow: 0 0 350px rgba(0,0,0,0.95) inset;
+}
+
+.canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: transparent;
   z-index: -1;
 }
 
+.visualizer-container {
+  transition: margin-left .5s;
+  z-index: 1;
+}
+
+.player-icon {
+  transform: rotate(270deg);
+}
+
 .circle {
+  z-index: 999;
   border-radius: 100%;
   background-color: transparent;
   width: 100px;
   height: 100px;
-  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/microsoft/74/party-popper_1f389.png');
+  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/microsoft/153/fire_1f525.png');
   background-repeat: no-repeat;
   background-position: center center;
   background-size: 50%;
@@ -62,11 +84,96 @@ body {
   right: 0;
 }
 
+.modal {
+  transform-style: preserve-3d;
+  opacity: 0;
+  z-index: 10;
+  position: absolute;
+  left: 0; 
+  right: 0;
+  top: 0; 
+  bottom: 0;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  width: fit-content;
+  min-width: 200px;
+  max-width: 75%;
+  border-radius: 6px;
+  max-height: 75%;
+  min-height: 100px;
+  height: fit-content;
+  text-align: center;
+  background-color: #181818;
+  overflow-y: auto;
+  animation: 0.27s modalEnter 0s forwards;
+  box-shadow: 1px 1px 3px black;
+}
+
+.modal-header {
+  background-color: #111111;
+  font-family: 'Inter', sans-serif;
+  color: white;
+  letter-spacing: -1.5px;
+  font-weight: 500;
+  font-size: 24px;
+  text-align: left;
+  padding: 1em;
+}
+
+.modal-subtext {
+  color: rgb(216, 216, 216);
+  font-size: 16px;
+  letter-spacing: -1.15px;
+}
+
+.modal-item, .modal-text {
+  font-family: 'Inter', sans-serif;
+  color: rgb(197, 197, 197);
+  letter-spacing: -1.15px;
+  font-weight: 500;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  padding: 0.5em;
+  margin-left: 1em;
+}
+
+.modal-item:hover {
+  background-color: #222222;
+  cursor: pointer;
+}
+
+@keyframes modalEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.85) perspective(400px) rotateX(10deg);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) perspective(0px) rotateX(0deg);
+  }
+}
+
+@keyframes modalExit {
+  0% {
+    opacity: 1;
+    transform: scale(1) perspective(0px) rotateX(0deg);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(0.85) perspective(400px) rotateX(10deg);
+  }
+}
+
 .menu {
   height: 100%;
   width: 0;
-  position: fixed;
-  z-index: 1;
+  position: absolute;
+  z-index: 50;
   top: 0;
   left: 0;
   background-color: #111;
@@ -75,7 +182,27 @@ body {
   padding-top: 60px;
 }
 
+.menu::-webkit-scrollbar {
+  width: 5px;
+  height: 14px;
+}
+
+.menu::-webkit-scrollbar-thumb {
+ background-clip: padding-box;
+ border-width: 3px;
+ border-style: solid;
+ border-radius: 7px;
+ border-color: #202225;
+}
+
+.menu::-webkit-scrollbar-track-piece {
+ background-color: #2f3136;
+ border: 3px solid #36393f;
+ border-radius: 7px;
+}
+
 .menu a {
+  z-index: 50;
   padding: 8px 8px 8px 32px;
   text-decoration: none;
   font-size: 25px;
@@ -292,7 +419,7 @@ body {
 .particle {
   position: absolute;
   z-index: -1;
-  animation: 500ms fadeOut 0.65s forwards;
+  animation: 2s fadeOut 0.65s forwards;
   transform: translate3d(0, 0, 0);
 }
 
@@ -312,33 +439,37 @@ body {
   height: 3px;
 }
 
-.custom-particle {
-  width: 32px;
-  height: 32px;
-  z-index: -1;
-  animation: 500ms fadeOut 0.24s forwards;
-  opacity: 0.5;
-  transform: translate3d(0, 0, 0);
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: 50%;
-  background-color: transparent;
+.fade-in {
+  animation: 0ms fadeIn 0.2s forwards;
 }
 
-.particle-star {
-  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/white-medium-star_2b50.png') !important;
+.fade-out-lyrics {
+  opacity: 0;
+  animation: lyricsFadeOut 2s forwards;
 }
 
-.particle-star-1 {
-  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/glowing-star_1f31f.png') !important;
+.fade-in-lyrics {
+  opacity: 0;
+  animation: lyricsFadeIn 0.4s forwards;
 }
 
-.particle-confetti {
-  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/confetti-ball_1f38a.png') !important;
+.fade-new-lyrics {
+  animation: lyricsFadeInNew 0.4s;
 }
 
-.particle-sparkle {
-  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/120/microsoft/209/sparkles_2728.png') !important;
+.opacity-1 {
+  opacity: 1;
+}
+
+.bass-effect-outside {
+  animation: 0ms bassShakeSides 0.2s forwards;
+}
+
+.normal-particle {
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 360px;
+  width: 7px;
+  height: 7px;
 }
 
 .rumble {
@@ -388,13 +519,159 @@ input[type="text"] {
   align-items: center;
 }
 
+.lyrics {
+  transition: opacity 0.3s;
+  opacity: 0;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.76px;
+  padding: 0.25em;
+  background: rgba(0, 0, 0, 0.6);
+  font-size: 48px;
+  text-align: center;
+  font-weight: 800;
+  color: white;
+  top: 10%;
+  left: 50%;
+  transform: translate3d(-50%,-50%, 0);
+  position: absolute;
+  border-radius: 12px;
+}
+
+
+.game-info {
+  margin-left: auto;
+  margin-right: 64px;
+  flex-direction: column;
+}
+
+.bullet-meter {
+  margin-bottom: 8px;
+}
+
+.bullet-meter-progress {
+  transition: 0.1s all;
+  position: absolute;
+  z-index: 1;
+  height: 350px;
+  background: rgb(227, 111, 250);
+  box-shadow: -2px 2px 5px rgb(164, 69, 177);
+  border-radius: 4px;
+  max-height: 350px;
+  top: 50%;
+  left: 24px;
+  width: 10px;
+}
+
+.bullet-meter-full {
+  position: absolute;
+  top: 50%;
+  left: 24px;
+  background: grey;
+  width: 10px;
+  height: 350px;
+  border-radius: 4px;
+  max-height: 350px;
+}
+
+.player-health {
+  margin-bottom: 8px;
+}
+
+.player-health-progress {
+  transition: 0.1s all;
+  position: relative;
+  height: 10px;
+  background: rgb(111, 217, 250);
+  box-shadow: -2px 2px 5px rgb(69, 116, 177);
+  border-radius: 4px;
+  max-width: 350px;
+  top: 10px;
+  width: 100%;
+}
+
+.player-health-full {
+  background: grey;
+  width: 350px;
+  height: 10px;
+  border-radius: 4px;
+  max-width: 350px;
+}
+
+.base-health-progress {
+  transition: 0.1s all;
+  position: relative;
+  height: 10px;
+  background: rgb(111, 217, 250);
+  box-shadow: -2px 2px 5px rgb(69, 116, 177);
+  border-radius: 4px;
+  max-width: 350px;
+  top: 10px;
+  width: 100%;
+}
+
+.base-health-full {
+  background: grey;
+  width: 350px;
+  height: 10px;
+  border-radius: 4px;
+  max-width: 350px;
+}
+
+.healthbar-header {
+  color: #ebebeb;
+  text-transform: uppercase;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: -0.5px;
+  margin-top: 8px;
+  margin-bottom: 2px;
+  margin-left: -6px;
+}
+
+
 @keyframes fadeOut {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lyricsFadeOut {
   from {
-    opacity: initial;
+    opacity: 1;
   }
 
   to {
     opacity: 0;
+  }
+}
+
+@keyframes lyricsFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lyricsFadeInNew {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
   }
 }
 

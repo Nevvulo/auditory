@@ -1,12 +1,33 @@
-// i would like to personally apologize to anyone trying to read this
-// not the cleanest thing i've ever made
-let flipAmount = -1;
-async function setupClassicVisualizer () {
+const Particles = require('./components/particles');
+
+const FFT_SIZES = [ 64, 256, 1024, 2048, 4096, 8192 ];
+const FFT_DIVIDE = [ 1e5, 1e6, 1e7, 1e7, 8e7, 2e8 ];
+
+async function setupClassicVisualizer (sourceId) {
   console.log('Creating new classic visualizer')
-  if (this.intervals) {
+  // If an existing visualizer already exists, stop it
+  if (this.intervals && this.intervals.animation) {
     stop();
   }
   
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: {
+      mandatory: {
+        chromeMediaSource: 'desktop',
+        chromeMediaSourceId: sourceId
+      }
+    },
+    // Before people ask, no, Auditory does not use your video devices whatsoever!
+    // We're only requesting this permission because Electron is extremely weird and
+    // inconsistent regarding streams and sometimes won't detect anything on some devices if this is not provided
+    video: {
+      mandatory: {
+        chromeMediaSource: 'desktop'
+      }
+    }
+  });
+
+  // Settings
   const brightness = this.settings.get('brightness');
   const beastiness = this.settings.get('beastiness');
   const color = this.settings.get('color');
@@ -16,31 +37,14 @@ async function setupClassicVisualizer () {
   const image = this.settings.get('image');
   const rotation = this.settings.get('rotation');
   const important = false
-  const defaultcolor = '#202225';
-
-  const FFT_SIZES = [ 32, 64, 128, 256, 1024 ];
-  const FFT_DIVIDE = [ 1e5, 1e5, 1e6, 1e6, 1e7 ];
-
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: {
-      mandatory: {
-        chromeMediaSource: 'desktop'
-      }
-    },
-    video: {
-      mandatory: {
-        chromeMediaSource: 'desktop'
-      }
-    }
-  });
-
-  const audioCtx = new AudioContext();
-  const audio = audioCtx.createMediaStreamSource(stream);
+  const ultra = this.settings.get('ultra');
+  const useLowerQuality = { animation: beastiness < 5, audio: beastiness < 2 };
 
   // Create an analyser
+  const audioCtx = new AudioContext();
+  const audioStream = audioCtx.createMediaStreamSource(stream);
   const analyser = audioCtx.createAnalyser();
-  audio.connect(analyser);
-  
+  audioStream.connect(analyser);
   analyser.fftSize = FFT_SIZES[(beastiness || 1) - 1];
   analyser.frequencyBinCount = 1024;
 
@@ -51,69 +55,74 @@ async function setupClassicVisualizer () {
       b: bigint & 255 };
   };
   const customColor = hexToRGB((color || '').replace('#', '')) || hexToRGB('ef5350');
+  let AudioAnalysis = {
+    amount: 0,
+    bass: 0,
+    amp: 0
+  }
 
   // Find the container to change the style
   body = document.querySelector('body');
   let visualizer = document.querySelector('.visualizer');
-  let canvas = document.querySelector('.canvas');
+  const canvas = document.querySelector('.canvas');
   let fpsCounter = document.querySelector('.fps-counter');
   let fpsCounterMenu = document.querySelector('.fps-counter-menu');
-  const container = document.querySelector('.container');
-  const visualizerContainer = document.querySelector('.visualizer-container');
-  const box = visualizer.getBoundingClientRect();
-  let visualizerContainerBox = visualizerContainer.getBoundingClientRect();
   const ampValue = document.querySelector('#amp-value');
-  const particleCounter = document.querySelector('#particle-count');
   const rotationValue = document.querySelector('#rotation-value');
   const visualizerCore = document.querySelector('.circle');
-
-  const ctx = canvas.getContext('2d');
-
   visualizerCore.style.backgroundImage = `url('${image}')`;
 
   let red = 255,
     green = 0,
     blue = 0;
-
   let turnAround = false;
-
-  let particles = [];
-  let timeSinceLastBass = Date.now();
-  const PARTICLE_TYPES = ['star', 'star-1', 'sparkle', 'confetti']
-  const particleInterval = setInterval(() => {
-    visualizerContainerBox = visualizerContainer.getBoundingClientRect();
-    const particleElements = document.querySelectorAll('.particle');
-    for (const particle of [ ...particleElements ]) {
-      if (Date.now() - particle.timestamp > 5e3) {
-        particle.remove();
-      }
-    }
-  }, 5e3);
   let amountMultiplier = 1;
+  let flipAmount = -1;
   let lastLoop = Date.now();
 
-  const keys = {};
-  window.onkeyup = function(e) { keys[e.keyCode] = false; }
-  window.onkeydown = function(e) { keys[e.keyCode] = true; }
+  const hexToRGB = (hex) => {
+    const bigint = parseInt(hex, 16);
+    return { r: (bigint >> 16) & 255,
+      g: (bigint >> 8) & 255,
+      b: bigint & 255 };
+  };
+  const customColor = hexToRGB((color || '').replace('#', '')) || hexToRGB('ef5350');
+
+  const audio = () => {
+    // Audio analysis
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    analyser.getByteFrequencyData(dataArray);
+
+    let amount = 0, bass = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+      if (i < 16) {
+        bass += dataArray[i] / 10;
+      }
+      amount += dataArray[i];
+    }
+    amount *= amountMultiplier;
+    bass *= amountMultiplier;
+
+    const amp = (mode === 'amp' 
+    ? Math.abs(amount ** 2) / FFT_DIVIDE[(beastiness || 1) - 1] 
+    : (amount / bufferLength) * 2) * amplitude;
+
+    AudioAnalysis = { amount, amp, bass }
+    if (this.game) this.game.transferAudioData({ amount, amp, bass })
+    if (this.particles) this.particles.transferAudioData({ amount, amp, bass })
+    return { amount, amp, bass };
+  }
 
   // Perform style changes
-  const style = setInterval(() => {
+  const animation = () => {
+    const { amount, bass, amp } = AudioAnalysis
     if (!visualizer) {
       return;
     }
     let thisLoop = Date.now();
     let fps = 1000 / (thisLoop - lastLoop);
     lastLoop = thisLoop;
-    if (fps < 60) {
-      fpsCounter.style.display = 'block';
-      fpsCounter.innerHTML = `!  ${fps.toFixed(2)} FPS`;
-      fpsCounter.style.background = `rgba(252, 3, 3, ${((60 - fps) / 100)})`
-    } else {
-      fpsCounter.style.display = 'none';
-    }
-    fpsCounterMenu.innerHTML = `${fps.toFixed(2)} FPS`;
-    
-    const bufferLength = analyser.frequencyBinCount;
     
     if (flipAmount > rotation) {
       turnAround = false;
@@ -126,128 +135,31 @@ async function setupClassicVisualizer () {
       flipAmount -= 0.01;
     }
 
-    if (keys[90]) {
-      amountMultiplier += amountMultiplier < 4 ? 0.005 : 0;
-    } else {
-      amountMultiplier -= amountMultiplier > 1 ? 0.005 : 0;
+    // If the menu is open, update statistics
+    if (window.menuOpened) {
+      fpsCounterMenu.innerHTML = `${fps.toFixed(2)} FPS`;
+      ampValue.innerHTML = `${amp.toFixed(0)} amplitude, ${bass.toFixed(0)} bass`;
+      rotationValue.innerHTML = flipAmount.toFixed(2);
     }
 
-    const w = 250;
-    const h = 64;
-
-    const dataArray = new Uint8Array(bufferLength);
-    const timeArray = new Uint8Array(bufferLength);
-    analyser.getByteFrequencyData(dataArray);
-    analyser.getByteTimeDomainData(timeArray);
-
-    ctx.fillStyle = 'rgb(5, 5, 5)';
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = 'rgb(255, 255, 255)';
-    ctx.beginPath();
-
-    var sliceWidth = w * 1.0 / bufferLength;
-    var x = 0;
-
-    for (var i = 0; i < bufferLength; i++) {
-      var v = timeArray[i] / 128.0;
-      var y = v * h / 2;
-      if (i === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-      x += sliceWidth;
-    }
-
-    ctx.lineTo(canvas.width, canvas.height/2);
-    ctx.stroke();
-
-    const amount = dataArray.reduce((a, b) => a + b) * amountMultiplier;
-    const bass = ((timeArray.slice(0, 4).reduce((a, b) => a + b) / 128) * amountMultiplier) * 80;
-
-    const xDFT_psd = Math.abs(amount ** 2);
-    const amp = (mode === 'amp' ? xDFT_psd / FFT_DIVIDE[(beastiness || 1) - 1] : (amount / bufferLength) * 2) * amplitude;
-    ampValue.innerHTML = `${amp.toFixed(0)} amplitude, ${bass.toFixed(0)} bass`;
-    rotationValue.innerHTML = flipAmount.toFixed(2);
-
+    // Display static background if no music is playing
     if (!amp) {
       body.setAttribute('style', `background: rgba(${customColor.r}, ${customColor.g}, ${customColor.b}, 1)`);
     } else {
-      particleCounter.innerHTML = `${particles.filter(m => m.lifespan < 4.5e3).length} active, ${particles.length} total`;
-      if (bass > 390 && shakeAmount > 0) {
-        timeSinceLastBass = Date.now()
-        container.style.boxShadow = `inset 0px 0px ${bass / 10}px ${bass / 15}px rgba(0, 0, 0, ${bass / 1e3})`;
-        visualizer.style.filter = `blur(${amp / (shakeAmount > 1 ? 300 : 500)}px)`;
-        circle.classList.add(shakeAmount > 1 ? 'bigrumble' : 'rumble');
-      } else {
-        if (Date.now() - timeSinceLastBass > 100) {
-          visualizer.style.filter = `blur(0px)`;
-          circle.classList.remove('rumble', 'bigrumble');
-        }
-      }
-      if ((amp > 120 && bass > 300) || keys[88]) { // x key
-        let particleCount = ((amp / (amp / 22.5)) * beastiness) * 4;
-
-        let spawned = 0;
-        while (!keys[88] ? (particles.length < particleCount || spawned < 50) : spawned < 100) {
-          if (!keys[88] && particles.length > particleCount) break;
-          spawned++;
-          const particle = document.createElement('div');
-          visualizerContainer.append(particle)
-          const type = Math.random() > 0.75 ? PARTICLE_TYPES[Math.floor(Math.random() * PARTICLE_TYPES.length)] : '';
-          const size = Math.floor(Math.random() * (13 * !type ? 1 : 5)); // size in px
-
-          particle.classList.add('particle', type ? 'custom-particle' : 'normal-particle', `particle-${type}`);
-          particle.style.width = particle.style.height = `${size}px !important`;
-          particle._own = {
-            pos: {
-              x: 50,
-              y: -50
-            },
-            vel: {
-              x: -0.5 + Math.random() * (Math.random() * 4),
-              y: -0.5 + Math.random() * (Math.random() * 4)
-            },
-            speed: {
-              x: Math.min(0.6, (amp / 70) / 10),
-              y: Math.min(0.6, (amp / 70) / 10)
-            },
-            dir: {
-              x: Math.random() > 0.5 ? 4 : -4,
-              y: Math.random() > 0.5 ? 4 : -4
-            }
-          };
-          particle.lifespan = 0;
-          particle.timestamp = Date.now();
-          particles.push(particle)
-        }
-        if (keys[88]) {
-          keys[88] = false;
-          console.log(`Spawning 100 particles through debug key (max ${particleCount})`)
-        }
-      }
-
-      for (let i = 0; i < particles.length; i++) {
-        const particle = particles[i];
-        let speedAmp = Math.max(0.4, Math.floor(amp / 100) / 2);
-        if (bass > 500) {
-          speedAmp *= 2;
-        }
-        particle._own.pos.x += (particle._own.vel.x * particle._own.speed.x * speedAmp) * particle._own.dir.x;
-        particle._own.pos.y += (particle._own.vel.y * particle._own.speed.y * speedAmp) * particle._own.dir.y;
-        particle.lifespan += Math.random() * (Math.random() * 60);
-        particle.style.transform = `translateX(${particle._own.pos.x}px) translateY(${particle._own.pos.y}px) rotate(${particle.lifespan / 50}deg)`;
-        
-        if (particle.lifespan > Math.max(4.5e3, 6e3 + Math.random() * 2e3)) {
-          particle.remove();
-          particles.splice(particles.indexOf(particle), 1);
-        }
-      }
-
       visualizer.style.transform = `rotate(${amp / 10 + flipAmount * 2}deg) scale(${(Math.max(0.1, amp / 100) * 1.35)})`
+      canvas.style.transform = `scale(${1 + (Math.min(0.01, amp * 0.0001))})`
+      if (bass > 325 && shakeAmount > 0) {
+        visualizer.style.filter = `blur(${amp / (shakeAmount > 1 ? 300 : 500)}px)`;
+        canvas.style.filter = `blur(${(amp * 3.5) / (shakeAmount > 1 ? 300 : 500)}px)`
+        circle.classList.add(shakeAmount > 1 ? 'bigrumble' : 'rumble');
+        canvas.classList.add(shakeAmount > 1 ? 'bigrumble' : 'rumble');
+      } else {
+        canvas.style.filter = visualizer.style.filter = `blur(0px)`;
+        circle.classList.remove('rumble', 'bigrumble');
+        canvas.classList.remove('rumble', 'bigrumble');
+      }     
 
+      // If no color is specified, cycle through rainbow
       if (!color) {
         const colorAmp = Math.max(0.5, Math.floor(amp / 100) / 2);
         if (red > 0 && blue <= 0) {
@@ -262,33 +174,116 @@ async function setupClassicVisualizer () {
           red += colorAmp;
           blue -= colorAmp;
         }
-        body.setAttribute('style', `background: rgba(${red}, ${green}, ${blue}, ${0.1 * (amp / 2 / (100.1 - (brightness || 0.1))).toString()}) ${important ? '!important' : ''}`);
+        body.style.background = `rgba(${red}, ${green}, ${blue}, ${0.1 * (amp / 2 / (100.1 - (brightness || 0.1))).toString()}) ${important ? '!important' : ''}`;
       } else {
-        body.setAttribute('style', `background: rgba(${customColor.r}, ${customColor.g}, ${customColor.b}, ${0.1 * (amp / 2 / (100.1 - (brightness || 0.1))).toString()}) ${important ? '!important' : ''}`);
+        body.style.background = `rgba(${customColor.r}, ${customColor.g}, ${customColor.b}, ${0.1 * (amp / 2 / (100.1 - (brightness || 0.1))).toString()}) ${important ? '!important' : ''}`;
       }
       body.style.boxShadow = `inset 0px 0px ${10 + amp / 3}px ${40 + amp / 3}px ${body.style.background}`;
     }
-  }, 1000 / (15 * ((beastiness || 1) * 5))); // runs at about 250 fps, if too laggy change
-  this.intervals = [ style, particleInterval ];
-}
-
-async function start () {
-  const { desktopCapturer } = require('electron');
-  const sources = await desktopCapturer.getSources({ types: [ 'window', 'screen' ] });
-  for (const source of sources) {
-    if (source.name.includes('Screen 1')) {
-      try {
-        setupClassicVisualizer();
-      } catch (e) {
-        console.error(e);
-        reload();
-      }
-      return;
+    if (useLowerQuality.animation) {
+      requestAnimationFrame(animation);
     }
+  }
+
+  // Begin animation
+  if (!useLowerQuality.audio) {
+    this.intervals.audio = setInterval(audio, 1);
+  } else {
+    this.intervals.audio = setInterval(audio, 16);
+  }
+  if (!useLowerQuality.animation) {
+    this.intervals.animation = setInterval(animation, 1);
+  } else {
+    if (this.intervals) clearInterval(this.intervals.animation)
+    requestAnimationFrame(animation);
   }
 }
 
+function selectSource (source) {
+  setupClassicVisualizer(source.id).catch(() => {
+    const modalHeader = document.createElement('div');
+    modalHeader.innerText = 'Oh no!';
+    modalHeader.classList.add('modal-header');
+    const modalDiv = document.createElement('div');
+    const modalText = document.createElement('div');
+    modalDiv.appendChild(modalHeader);
+    modalDiv.appendChild(modalText);
+    modalDiv.classList.add('modal');
+    modalText.classList.add('modal-text');
+    modalText.innerText = 'We weren\'t able to capture audio for some reason :(\nCheck the console if you want to troubleshoot this'
+    document.body.appendChild(modalDiv)
+  });
+}
 
+function start () {
+  const canvas = document.querySelector('.canvas');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  if (this.particles) {
+    this.particles.stop();
+  }
+
+  const ParticleField = new Particles(canvas);
+  this.particles = ParticleField;
+  ParticleField.start();
+
+  this.CANVAS_RESIZE_OBSERVER = new ResizeObserver(() => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    this.particles.recenterParticles();
+  }).observe(document.body)
+
+  const { desktopCapturer } = require('electron');
+  desktopCapturer.getSources({ types: [ 'window', 'screen' ] }, async (_, sources) => {
+    for (const source of sources) {
+      if (source.name.includes('Screen 1') || source.name.includes('Entire Screen')) {
+        try {
+          setupClassicVisualizer();
+        } catch (e) {
+          const modalSubtext = document.createElement('div');
+          modalSubtext.innerText = `If you\'re not sure which to pick, try "${sources[0].name}"`;
+          modalSubtext.classList.add('modal-subtext');
+          const modalHeader = document.createElement('div');
+          modalHeader.innerText = 'Select a window/screen to capture audio';
+          modalHeader.classList.add('modal-header');
+          const modalDiv = document.createElement('div');
+          modalDiv.appendChild(modalHeader);
+          modalHeader.appendChild(modalSubtext);
+          document.body.appendChild(modalDiv)
+          modalDiv.classList.add('modal');
+          sources.map(source => {
+            const nameDiv = document.createElement('div');
+            nameDiv.classList.add('modal-item');
+            nameDiv.innerText = source.name;
+            nameDiv.onclick = () => {
+              modalDiv.remove();
+              selectSource(source);
+            }
+            modalDiv.appendChild(nameDiv);
+          })
+        }
+        return;
+      }
+      return;
+    }
+  });
+}
+
+function requestPlayGame () {
+  this.particles.stop()
+  const Game = require('./components/game');
+  const GameField = new Game(canvas, {
+    endCallback: () => {
+      const canvas = document.querySelector('.canvas');
+      const ParticleField = new Particles(canvas);
+      this.particles = ParticleField;
+      ParticleField.start();
+    }
+  });
+  this.game = GameField;
+  GameField.start();
+}
 
 function continuouslyUpdateMediabar (currentTime, totalTime) {
   if (this.mediaBarInterval) {
@@ -312,8 +307,45 @@ function continuouslyUpdateMediabar (currentTime, totalTime) {
   }, 30)
 }
 
+function startLyrics (name, lyrics, songProgress) {
+  function round (value, precision) {
+    let multiplier = Math.pow(10, precision || 0);
+    return Math.round(value * multiplier) / multiplier;
+  }
+  const lyricsText = document.querySelector('.lyrics');
+  let timeSinceLastLyric = 0;
+  let lastLyric = null;
+  let time = songProgress || 0;
+  this.lyrics = { started: true, name };
+  this.lyricsInterval = setInterval(() => {
+    time += 50;
+    const seconds = round(time / 1000, 1).toFixed(1);
+    const lyric = lyrics[seconds];
+    if (lyric) {
+      if (lastLyric !== lyric) {
+        lyricsText.classList.remove('fade-new-lyrics')
+        lyricsText.classList.add('fade-new-lyrics')
+        setTimeout(() => lyricsText.classList.remove('fade-new-lyrics'), 20)
+      }
+      
+      timeSinceLastLyric = Date.now();
+      lyricsText.innerHTML = lyric;
+      lastLyric = lyric;
+    }
+    if (Date.now() - timeSinceLastLyric > 3.5e3) {
+      lyricsText.classList.remove('fade-in-lyrics')
+      lyricsText.classList.add('fade-out-lyrics')
+    } else {
+      lyricsText.classList.remove('fade-out-lyrics')
+      lyricsText.classList.add('fade-in-lyrics')
+    }
+  }, 50)
+}
+
 async function create () {
   console.log('New instance created')
+  this.intervals = {};
+  this.lyrics = { started: false, name: null };
   this.settings = new Map([
     ['brightness', 75],
     ['beastiness', 2],
@@ -321,13 +353,14 @@ async function create () {
     ['mode', 'amp'],
     ['amp', 1], // 1 to 10
     ['shake', 1], // 0 to 2, 0 = off, 1 = normal, 2 = fucked
-    ['image', 'https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/microsoft/74/party-popper_1f389.png'],
-    ['rotation', 13]
+    ['image', 'https://eadvice.co/wp-content/uploads/2018/01/animat-cube-color.gif'],
+    ['rotation', 13],
+    ['ultra', false]
   ])
   start();
 
   // Spotify Integration
-  const SpotifyInstance = require('./spotify.js')
+  const SpotifyInstance = require('./components/spotify/spotify.js')
   let spotify = null;
   try {
     spotify = new SpotifyInstance();
@@ -337,7 +370,25 @@ async function create () {
   console.log(spotify)
   const updateSpotify = async () => {
     const song = await spotify.getCurrentAlbumArt(true);
+    if (!song) {
+      return document.querySelector('.song').style.display = 'none';
+    }
     let name = song.item.name;
+    if (!this.lyrics.started || this.lyrics.name !== name) {
+      clearInterval(this.lyricsInterval);
+      const Lyrics = require('./components/lyrics.js');
+      let lyrics = null;
+      try {
+        lyrics = new Lyrics(name);
+      } catch (e) {
+        console.log(e)
+        lyrics = null;
+      }
+
+      if (lyrics) {
+        //startLyrics(name, lyrics, song.progress_ms + 200);
+      }
+    }
     let artists = song.item.artists.map(a => a.name).join(', ');
     if (!song.is_playing) {
       name = '.'
@@ -368,7 +419,7 @@ async function create () {
 }
 
 function stop () {
-  for (const interval of this.intervals) {
+  for (const interval of Object.values(this.intervals)) {
     clearInterval(interval);
   }
 }

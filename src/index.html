@@ -4,13 +4,16 @@
     <meta charset="UTF-8">
     <title>Auditory</title>
     <script src='./renderer.js'></script>
-    <script src='./menu.js'></script>
+    <script src='./components/menu.js'></script>
     <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
     <link rel='stylesheet' type='text/css' href='./index.css'></link>
   </head>
   <body>
     <div class='menu'>
         <a href='javascript:void(0)' class='closebtn' onclick='closeNav()'>&times;</a>
+        <div class='menu-header-large'>Game</div>
+        <button onclick="requestPlayGame()">Play</button>
+
         <div class='menu-header-large'>Appearance</div>
         <div class='menu-header'>Amplifier Mode</div>
         <button onclick="changeSetting('mode', settings.get('mode') === 'amp' ? 'fft' : 'amp')">Switch mode</button>
@@ -24,8 +27,9 @@
         <div class='menu-header-large'>Settings</div>
         <div class='menu-header'>Performance (lower is better)</div>
         <div class="slidecontainer">
-          <input onchange="changeSetting('beastiness', Number(this.value))" type="range" min="1" max="5" value="5" class="slider">
+          <input onchange="changeSetting('beastiness', Number(this.value))" type="range" min="1" max="6" value="5" class="slider">
         </div>
+
         <div class='menu-header'>Brightness</div>
         <div class="slidecontainer">
           <input onchange="changeSetting('brightness', Number(this.value))" type="range" min="1" max="100" value="75" class="slider">
@@ -100,18 +104,35 @@
             <div class='fps-counter'></div>
           </div>
         </div>
+
+        <div class='flex game-info' style='opacity: 0'>
+          <div class='healthbar-header'>Player Health</div>
+          <div class='player-health'>
+            <div class='player-health-progress'></div>
+            <div class='player-health-full'></div>
+          </div>
+          <div class='healthbar-header'>Visualizer Health</div>
+          <div class='base-health'>
+            <div class='base-health-progress'></div>
+            <div class='base-health-full'></div>
+          </div>
+        </div>
       </div>
     </div>
 
+    <div class='bullet-meter' style='display: none'>
+      <div class='bullet-meter-progress'></div>
+      <div class='bullet-meter-full'></div>
+    </div>
+    <img class='player-icon' width='25' height='25' hidden src='https://www.meniac.it/wp-content/uploads/2018/03/1a67cb8953d59094b55b5d1b29c2bdac.png' />
+    <img class='enemy-icon' width='25' height='25' hidden src='https://cdn.discordapp.com/emojis/576794872959336470.png?v=1' />
+    <canvas class='canvas' id='canvas'></canvas>
+    <div class='lyrics'></div>
+    <div class="vignette" style='display: none'></div>
     <div class='visualizer-container center'>
       <div class='visualizer'>
           <div id='circle' class='circle'></div>
       </div>
     </div>
-    <filter id="fancy-goo">
-      <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
-      <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
-    </filter>
   </body>
 </html>
