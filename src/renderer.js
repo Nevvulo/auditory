@@ -6,10 +6,7 @@ const FFT_DIVIDE = [ 1e5, 1e6, 1e7, 1e7, 8e7, 2e8 ];
 async function setupClassicVisualizer (sourceId) {
   console.log('Creating new classic visualizer')
   // If an existing visualizer already exists, stop it
-  if (this.intervals && this.intervals.animation) {
-    stop();
-  }
-  
+
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: {
       mandatory: {
@@ -37,8 +34,8 @@ async function setupClassicVisualizer (sourceId) {
   const image = this.settings.get('image');
   const rotation = this.settings.get('rotation');
   const important = false
-  const ultra = this.settings.get('ultra');
-  const useLowerQuality = { animation: beastiness < 5, audio: beastiness < 2 };
+  const useLowerQuality = { animation: beastiness < 4, audio: beastiness < 2 };
+  console.log('%c[ Settings ]', 'color: #b39ddb', Array.from(this.settings).map(e => `${e[0]} - ${e[1]}`).join(', '))
 
   // Create an analyser
   const audioCtx = new AudioContext();
@@ -65,7 +62,6 @@ async function setupClassicVisualizer (sourceId) {
   body = document.querySelector('body');
   let visualizer = document.querySelector('.visualizer');
   const canvas = document.querySelector('.canvas');
-  let fpsCounter = document.querySelector('.fps-counter');
   let fpsCounterMenu = document.querySelector('.fps-counter-menu');
   const ampValue = document.querySelector('#amp-value');
   const rotationValue = document.querySelector('#rotation-value');
@@ -79,14 +75,6 @@ async function setupClassicVisualizer (sourceId) {
   let amountMultiplier = 1;
   let flipAmount = -1;
   let lastLoop = Date.now();
-
-  const hexToRGB = (hex) => {
-    const bigint = parseInt(hex, 16);
-    return { r: (bigint >> 16) & 255,
-      g: (bigint >> 8) & 255,
-      b: bigint & 255 };
-  };
-  const customColor = hexToRGB((color || '').replace('#', '')) || hexToRGB('ef5350');
 
   const audio = () => {
     // Audio analysis
@@ -199,19 +187,23 @@ async function setupClassicVisualizer (sourceId) {
   }
 }
 
+function showErrorModal (message) {
+  const modalHeader = document.createElement('div');
+  modalHeader.innerText = 'Oh no!';
+  modalHeader.classList.add('modal-header');
+  const modalDiv = document.createElement('div');
+  const modalText = document.createElement('div');
+  modalDiv.appendChild(modalHeader);
+  modalDiv.appendChild(modalText);
+  modalDiv.classList.add('modal');
+  modalText.classList.add('modal-text');
+  modalText.innerText = message || 'We weren\'t able to capture audio for some reason :(\nCheck the console if you want to troubleshoot this';
+  document.body.appendChild(modalDiv)
+}
+
 function selectSource (source) {
   setupClassicVisualizer(source.id).catch(() => {
-    const modalHeader = document.createElement('div');
-    modalHeader.innerText = 'Oh no!';
-    modalHeader.classList.add('modal-header');
-    const modalDiv = document.createElement('div');
-    const modalText = document.createElement('div');
-    modalDiv.appendChild(modalHeader);
-    modalDiv.appendChild(modalText);
-    modalDiv.classList.add('modal');
-    modalText.classList.add('modal-text');
-    modalText.innerText = 'We weren\'t able to capture audio for some reason :(\nCheck the console if you want to troubleshoot this'
-    document.body.appendChild(modalDiv)
+    showErrorModal();
   });
 }
 
@@ -219,7 +211,7 @@ function start () {
   const canvas = document.querySelector('.canvas');
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight;
-
+  console.log(canvas.width)
   if (this.particles) {
     this.particles.stop();
   }
@@ -234,40 +226,46 @@ function start () {
     this.particles.recenterParticles();
   }).observe(document.body)
 
+  const fallback = () => {
+    const modalSubtext = document.createElement('div');
+    modalSubtext.innerText = `If you\'re not sure which to pick, try "${sources[0].name}"`;
+    modalSubtext.classList.add('modal-subtext');
+    const modalHeader = document.createElement('div');
+    modalHeader.innerText = 'Select a window/screen to capture audio';
+    modalHeader.classList.add('modal-header');
+    const modalDiv = document.createElement('div');
+    modalDiv.appendChild(modalHeader);
+    modalHeader.appendChild(modalSubtext);
+    document.body.appendChild(modalDiv)
+    modalDiv.classList.add('modal');
+    sources.map(source => {
+      const nameDiv = document.createElement('div');
+      nameDiv.classList.add('modal-item');
+      nameDiv.innerText = source.name;
+      nameDiv.onclick = () => {
+        modalDiv.remove();
+        selectSource(source);
+      }
+      modalDiv.appendChild(nameDiv);
+    })
+  }
+
   const { desktopCapturer } = require('electron');
-  desktopCapturer.getSources({ types: [ 'window', 'screen' ] }, async (_, sources) => {
+  const sourcesReceived = desktopCapturer.getSources({ types: [ 'window', 'screen' ] });
+  if (typeof sourcesReceived.then !== 'function') {
+    showErrorModal('You need Electron 6.0.0 or higher to run Auditory.')
+  }
+  sourcesReceived.then((sources) => {
     for (const source of sources) {
       if (source.name.includes('Screen 1') || source.name.includes('Entire Screen')) {
         try {
           setupClassicVisualizer();
         } catch (e) {
-          const modalSubtext = document.createElement('div');
-          modalSubtext.innerText = `If you\'re not sure which to pick, try "${sources[0].name}"`;
-          modalSubtext.classList.add('modal-subtext');
-          const modalHeader = document.createElement('div');
-          modalHeader.innerText = 'Select a window/screen to capture audio';
-          modalHeader.classList.add('modal-header');
-          const modalDiv = document.createElement('div');
-          modalDiv.appendChild(modalHeader);
-          modalHeader.appendChild(modalSubtext);
-          document.body.appendChild(modalDiv)
-          modalDiv.classList.add('modal');
-          sources.map(source => {
-            const nameDiv = document.createElement('div');
-            nameDiv.classList.add('modal-item');
-            nameDiv.innerText = source.name;
-            nameDiv.onclick = () => {
-              modalDiv.remove();
-              selectSource(source);
-            }
-            modalDiv.appendChild(nameDiv);
-          })
+          fallback(sources);
         }
-        return;
       }
-      return;
     }
-  });
+  }).catch(() => showErrorModal())
 }
 
 function requestPlayGame () {
@@ -348,7 +346,7 @@ async function create () {
   this.lyrics = { started: false, name: null };
   this.settings = new Map([
     ['brightness', 75],
-    ['beastiness', 2],
+    ['beastiness', 5],
     ['color', ''],
     ['mode', 'amp'],
     ['amp', 1], // 1 to 10
@@ -367,7 +365,7 @@ async function create () {
   } catch (e) {
     spotify = null;
   }
-  console.log(spotify)
+
   const updateSpotify = async () => {
     const song = await spotify.getCurrentAlbumArt(true);
     if (!song) {

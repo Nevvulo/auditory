@@ -60,17 +60,6 @@ body {
   position: absolute;
 }
 
-.bar {
-  background-color: red;
-  width: 4px;
-  height: 50px;
-  top: 50%;
-  left: 50%;
-  position: absolute;
-  z-index: -3;
-  filter:url("#fancy-goo");
-}
-
 .visualizer, .circle, .song {
   z-index: 999 !important;
 }
@@ -416,27 +405,12 @@ body {
   font-size: 18px;
 }
 
-.particle {
-  position: absolute;
-  z-index: -1;
-  animation: 2s fadeOut 0.65s forwards;
-  transform: translate3d(0, 0, 0);
-}
-
 .fade-out {
   animation: 0ms fadeOut 0.2s forwards;
 }
 
 .bass-effect-outside {
   animation: 0ms bassShakeSides 0.2s forwards;
-}
-
-.normal-particle {
-  background: rgba(255, 255, 255, 0.4);
-  box-shadow: 1px 1px 5px 3px rgba(255, 255, 255, 0.541);
-  border-radius: 360px;
-  width: 3px;
-  height: 3px;
 }
 
 .fade-in {
@@ -461,16 +435,6 @@ body {
   opacity: 1;
 }
 
-.bass-effect-outside {
-  animation: 0ms bassShakeSides 0.2s forwards;
-}
-
-.normal-particle {
-  background: rgba(0, 0, 0, 0.4);
-  border-radius: 360px;
-  width: 7px;
-  height: 7px;
-}
 
 .rumble {
   animation: shake 0.1s cubic-bezier(.36,.07,.19,.97) both;

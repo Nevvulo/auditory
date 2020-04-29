@@ -41,7 +41,7 @@ module.exports = class GenericCanvasMoveable extends CanvasController {
             this.move(this.x + this.speedX, this.y + this.speedY);
         }
 
-        const ctx = this.getContext();
+        const ctx = this.getContext('2d');
         ctx.save();
         
         if (this.alpha) {

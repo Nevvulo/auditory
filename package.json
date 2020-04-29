@@ -4,7 +4,8 @@
   "description": "Audio visualiser made in Electron",
   "main": "index.js",
   "dependencies": {
-    "axios": "^0.19.2"
+    "axios": "^0.19.2",
+    "electron": "^8.2.4"
   },
   "devDependencies": {
     "electron-winstaller": "^4.0.0"

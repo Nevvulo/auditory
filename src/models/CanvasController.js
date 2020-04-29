@@ -65,7 +65,7 @@ module.exports = class CanvasController {
         return true;
     }
 
-    updateCanvas () {
+    updateCanvas () { 
         if (this.components.length > 3e3) {
             this.log(`Component count is high! ${this.components.length} components being rendered`)
         }

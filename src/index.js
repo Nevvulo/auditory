@@ -2,6 +2,10 @@ const { app, BrowserWindow } = require('electron')
 const path = require('path')
 const url = require('url')
 
+app.commandLine.appendSwitch("enable-color-correct-rendering", "false")
+app.commandLine.appendSwitch("enable-draw-occlusion", "true")
+app.commandLine.appendSwitch("force-color-profile", "sRGB")
+
 // this should be placed at top of main.js to handle setup events quickly
 if (handleSquirrelEvent(app)) {
   // squirrel event handled and app will exit in 1000ms, so don't do anything else
