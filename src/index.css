@@ -89,12 +89,12 @@ body {
   min-width: 200px;
   max-width: 75%;
   border-radius: 6px;
-  max-height: 75%;
+  max-height: 350px;
   min-height: 100px;
   height: fit-content;
   text-align: center;
   background-color: #181818;
-  overflow-y: auto;
+  overflow-y: scroll;
   animation: 0.27s modalEnter 0s forwards;
   box-shadow: 1px 1px 3px black;
 }
@@ -116,6 +116,15 @@ body {
   letter-spacing: -1.15px;
 }
 
+.modal-subtext a {
+  color: #64b5f6;
+}
+
+.modal-header-small {
+  text-align: left;
+  margin-left: 12px;
+}
+
 .modal-item, .modal-text {
   font-family: 'Inter', sans-serif;
   color: rgb(197, 197, 197);
@@ -132,6 +141,25 @@ body {
 .modal-item:hover {
   background-color: #222222;
   cursor: pointer;
+}
+
+.modal::-webkit-scrollbar {
+  width: 5px;
+  height: 14px;
+}
+
+.modal::-webkit-scrollbar-thumb {
+ background-clip: padding-box;
+ border-width: 3px;
+ border-style: solid;
+ border-radius: 7px;
+ border-color: #202225;
+}
+
+.modal::-webkit-scrollbar-track-piece {
+ background-color: #2f3136;
+ border: 3px solid #36393f;
+ border-radius: 7px;
 }
 
 @keyframes modalEnter {

@@ -3,25 +3,25 @@ const Particles = require('./components/particles');
 const FFT_SIZES = [ 64, 256, 1024, 2048, 4096, 8192 ];
 const FFT_DIVIDE = [ 1e5, 1e6, 1e7, 1e7, 8e7, 2e8 ];
 
-async function setupClassicVisualizer (sourceId) {
-  console.log('Creating new classic visualizer')
+async function setupClassicVisualizer (id, device = false, attemptWithVideo) {
+  console.log('%c[ Visualizer ]', 'color: #64b5f6', `Creating new classic visualizer${id ? ` with source ID ${id} (device = ${device})` : ''}`)
   // If an existing visualizer already exists, stop it
 
   const stream = await navigator.mediaDevices.getUserMedia({
-    audio: {
+    audio: device ? {
+      deviceId: id
+    } : {
       mandatory: {
         chromeMediaSource: 'desktop',
-        chromeMediaSourceId: sourceId
+        chromeMediaSourceId: id
       }
     },
     // Before people ask, no, Auditory does not use your video devices whatsoever!
     // We're only requesting this permission because Electron is extremely weird and
     // inconsistent regarding streams and sometimes won't detect anything on some devices if this is not provided
-    video: {
-      mandatory: {
-        chromeMediaSource: 'desktop'
-      }
-    }
+    video: attemptWithVideo ? { mandatory: {
+      chromeMediaSource: 'desktop'
+    } } : undefined
   });
 
   // Settings
@@ -201,8 +201,9 @@ function showErrorModal (message) {
   document.body.appendChild(modalDiv)
 }
 
-function selectSource (source) {
-  setupClassicVisualizer(source.id).catch(() => {
+function selectSource (id, device) {
+  setupClassicVisualizer(id, true).catch((e) => {
+    console.error(e);
     showErrorModal();
   });
 }
@@ -226,9 +227,12 @@ function start () {
     this.particles.recenterParticles();
   }).observe(document.body)
 
-  const fallback = () => {
+  const fallback = async (sources) => {
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    const modalTextContainer = document.createElement('div');
     const modalSubtext = document.createElement('div');
-    modalSubtext.innerText = `If you\'re not sure which to pick, try "${sources[0].name}"`;
+    modalSubtext.innerHTML = `If you\'re not sure which to pick, try "Screen 1" to capture system audio<br/>Users on macOS may require 
+    an <a href='https://www.google.com/search?q=loopback+audio+device+mac'>audio loopback device</a> to capture system audio (<a href='https://www.electronjs.org/docs/api/desktop-capturer#caveats'>learn more here</a>)`;
     modalSubtext.classList.add('modal-subtext');
     const modalHeader = document.createElement('div');
     modalHeader.innerText = 'Select a window/screen to capture audio';
@@ -238,16 +242,39 @@ function start () {
     modalHeader.appendChild(modalSubtext);
     document.body.appendChild(modalDiv)
     modalDiv.classList.add('modal');
-    sources.map(source => {
+
+    const createMinorHeader = (text) => {
+      const header = document.createElement('div');
+      header.classList.add('menu-header', 'modal-header-small');
+      header.innerText = text;
+      return header;
+    }
+    
+    sources.map((source, i) => {
+    if (!i) modalTextContainer.appendChild(createMinorHeader('Windows / Screens'));
       const nameDiv = document.createElement('div');
       nameDiv.classList.add('modal-item');
       nameDiv.innerText = source.name;
       nameDiv.onclick = () => {
         modalDiv.remove();
-        selectSource(source);
+        selectSource(source.id);
       }
-      modalDiv.appendChild(nameDiv);
+      modalTextContainer.appendChild(nameDiv);
     })
+    
+    devices.map((source, i) => {
+      if (!i) modalTextContainer.appendChild(createMinorHeader('Devices (microphones, loopback devices, etc)'));
+      const nameDiv = document.createElement('div');
+      nameDiv.classList.add('modal-item');
+      nameDiv.innerText = source.label;
+      nameDiv.onclick = () => {
+        modalDiv.remove();
+        selectSource(source.deviceId, true);
+      }
+      modalTextContainer.appendChild(nameDiv);
+    })
+    
+    modalDiv.appendChild(modalTextContainer)
   }
 
   const { desktopCapturer } = require('electron');
@@ -259,7 +286,7 @@ function start () {
     for (const source of sources) {
       if (source.name.includes('Screen 1') || source.name.includes('Entire Screen')) {
         try {
-          setupClassicVisualizer();
+          setupClassicVisualizer(undefined, false, true).catch(() => fallback(sources));
         } catch (e) {
           fallback(sources);
         }
