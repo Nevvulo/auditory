@@ -5,7 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "axios": "^0.19.2",
-    "electron": "^8.2.4"
+    "electron": "^8.5.2"
   },
   "devDependencies": {
     "electron-winstaller": "^4.0.0"
