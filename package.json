@@ -2,7 +2,7 @@
   "name": "auditory",
   "version": "2.1.0",
   "description": "Audio visualiser made in Electron",
-  "main": "index.js",
+  "main": "src/index.js",
   "dependencies": {
     "axios": "^0.21.1",
     "electron": "^9.4.0"
@@ -11,6 +11,7 @@
     "electron-winstaller": "^4.0.0"
   },
   "scripts": {
+    "start": "electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {

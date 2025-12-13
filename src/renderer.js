@@ -9,12 +9,18 @@ async function setupClassicVisualizer (id, device = false, attemptWithVideo) {
 
   const stream = await navigator.mediaDevices.getUserMedia({
     audio: device ? {
-      deviceId: id
+      deviceId: id,
+      sampleRate: 48000,
+      echoCancellation: false,
+      noiseSuppression: false
     } : {
       mandatory: {
         chromeMediaSource: 'desktop',
         chromeMediaSourceId: id
-      }
+      },
+      sampleRate: 48000,
+      echoCancellation: false,
+      noiseSuppression: false
     },
     // Before people ask, no, Auditory does not use your video devices whatsoever!
     // We're only requesting this permission because Electron is extremely weird and
@@ -66,7 +72,6 @@ async function setupClassicVisualizer (id, device = false, attemptWithVideo) {
   const ampValue = document.querySelector('#amp-value');
   const rotationValue = document.querySelector('#rotation-value');
   const visualizerCore = document.querySelector('.circle');
-  visualizerCore.style.backgroundImage = `url('${image}')`;
 
   let red = 255,
     green = 0,
@@ -92,9 +97,9 @@ async function setupClassicVisualizer (id, device = false, attemptWithVideo) {
     amount *= amountMultiplier;
     bass *= amountMultiplier;
 
-    const amp = (mode === 'amp' 
-    ? Math.abs(amount ** 2) / FFT_DIVIDE[(beastiness || 1) - 1] 
-    : (amount / bufferLength) * 2) * amplitude;
+    const amp = (mode === 'amp'
+    ? Math.abs(amount ** 2) / FFT_DIVIDE[(beastiness || 1) - 1]
+    : (amount / bufferLength) * 2) * amplitude * 2;
 
     AudioAnalysis = { amount, amp, bass }
     if (this.game) this.game.transferAudioData({ amount, amp, bass })
@@ -134,9 +139,14 @@ async function setupClassicVisualizer (id, device = false, attemptWithVideo) {
     if (!amp) {
       body.setAttribute('style', `background: rgba(${customColor.r}, ${customColor.g}, ${customColor.b}, 1)`);
     } else {
-      visualizer.style.transform = `rotate(${amp / 10 + flipAmount * 2}deg) scale(${(Math.max(0.1, amp / 100) * 1.35)})`
+      // Map audio to variable font axes
+      const bleedValue = Math.min(100, Math.max(0, amp / 100)); // BLED axis (0-100)
+      const scanValue = Math.min(100, Math.max(0, bass / 167)); // SCAN axis (0-100)
+
+      visualizerCore.style.fontVariationSettings = `'BLED' ${bleedValue}, 'SCAN' ${scanValue}`;
+      visualizer.style.transform = `rotate(${amp / 1000 + flipAmount * 0.2}deg) scale(${1 + (Math.max(0, amp / 10000) * 0.5)})`
       canvas.style.transform = `scale(${1 + (Math.min(0.01, amp * 0.0001))})`
-      if (bass > 325 && shakeAmount > 0) {
+      if (bass > 324 && shakeAmount > 0) {
         visualizer.style.filter = `blur(${amp / (shakeAmount > 1 ? 300 : 500)}px)`;
         canvas.style.filter = `blur(${(amp * 3.5) / (shakeAmount > 1 ? 300 : 500)}px)`
         circle.classList.add(shakeAmount > 1 ? 'bigrumble' : 'rumble');
@@ -374,7 +384,7 @@ async function create () {
   this.settings = new Map([
     ['brightness', 75],
     ['beastiness', 5],
-    ['color', ''],
+    ['color', '#000000'],
     ['mode', 'amp'],
     ['amp', 1], // 1 to 10
     ['shake', 1], // 0 to 2, 0 = off, 1 = normal, 2 = fucked

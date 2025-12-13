@@ -1,5 +1,12 @@
 @import url('https://rsms.me/inter/inter.css');
 
+@font-face {
+  font-family: 'Sixtyfour';
+  src: url('../Sixtyfour.ttf') format('truetype');
+  font-weight: 1 999;
+  font-stretch: 1% 500%;
+}
+
 html {
   background-color: #212121;
 }
@@ -43,14 +50,14 @@ body {
 
 .circle {
   z-index: 999;
-  border-radius: 100%;
-  background-color: transparent;
-  width: 100px;
-  height: 100px;
-  background-image: url('https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/microsoft/153/fire_1f525.png');
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: 50%;
+  font-family: 'Sixtyfour', monospace;
+  font-size: 120px;
+  color: white;
+  text-align: center;
+  white-space: nowrap;
+  font-variation-settings: 'BLED' 0, 'SCAN' 0;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .center {
